@@ -33,6 +33,14 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
+// peekChar returns the next byte character to the current one
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	}
+	return l.input[l.readPosition]
+}
+
 // skipWhiteSpace calls readChar() on the lexer if the current character
 // is a whitespace of some kind
 func (l *Lexer) skipWhiteSpace() {
@@ -47,7 +55,15 @@ func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 	switch l.ch {
 	case '=':
-		tok = newToken(token.ASSIGN, l.ch)
+		// Check if this is an EQ operator "=="
+		if l.peekChar() == '=' {
+			ch := l.ch                           // save the current character
+			l.readChar()                         // move forward, updating l.ch
+			literal := string(ch) + string(l.ch) // compose the literal with previous and current ch
+			tok = token.Token{Type: token.EQ, Literal: literal}
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+		}
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
 	case '(':
@@ -62,6 +78,26 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACE, l.ch)
 	case '}':
 		tok = newToken(token.RBRACE, l.ch)
+	case '!':
+		// Check if this is an NOT_EQ operator "!="
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = token.Token{Type: token.NOT_EQ, Literal: literal}
+		} else {
+			tok = newToken(token.BANG, l.ch)
+		}
+	case '-':
+		tok = newToken(token.MINUS, l.ch)
+	case '/':
+		tok = newToken(token.SLASH, l.ch)
+	case '*':
+		tok = newToken(token.ASTERISK, l.ch)
+	case '<':
+		tok = newToken(token.LT, l.ch)
+	case '>':
+		tok = newToken(token.GT, l.ch)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -75,7 +111,7 @@ func (l *Lexer) NextToken() token.Token {
 		}
 		// In this case, the character is a number.
 		// We simply read the whole number and return it as the literal.
-		// Integers only are supported for simplicity.
+		// Monkey supports integers only, for simplicity.
 		if isDigit(l.ch) {
 			tok.Literal = l.readNumber()
 			tok.Type = token.INT
