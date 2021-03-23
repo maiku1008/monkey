@@ -1,7 +1,11 @@
+// Package lexer provides facilities to convert monkey source code into tokens
 package lexer
 
-import "monkey/token"
+import (
+	"monkey/token"
+)
 
+// Lexer translates source code into tokens
 type Lexer struct {
 	input        string
 	position     int  // current position in input (points to current char)
@@ -9,12 +13,16 @@ type Lexer struct {
 	ch           byte // current char under examination
 }
 
+// New initialises a Lexer
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
 	l.readChar()
 	return l
 }
 
+// readChar reads each character and updates the Lexer's fields.
+// It does so by advancing the current position one at a time at each call
+// until the end of the input.
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
 		l.ch = 0
@@ -25,7 +33,17 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
+// skipWhiteSpace calls readChar() on the lexer if the current character
+// is a whitespace of some kind
+func (l *Lexer) skipWhiteSpace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
+// NextToken returns a new Token depending on the current character
 func (l *Lexer) NextToken() token.Token {
+	l.skipWhiteSpace()
 	var tok token.Token
 	switch l.ch {
 	case '=':
@@ -47,11 +65,62 @@ func (l *Lexer) NextToken() token.Token {
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
+	default:
+		// In this case, the character is a letter.
+		// We read the whole word and determine if it's a valid identifier or not.
+		if isLetter(l.ch) {
+			tok.Literal = l.readIdentifier()
+			tok.Type = token.LookupIdent(tok.Literal)
+			return tok
+		}
+		// In this case, the character is a number.
+		// We simply read the whole number and return it as the literal.
+		// Integers only are supported for simplicity.
+		if isDigit(l.ch) {
+			tok.Literal = l.readNumber()
+			tok.Type = token.INT
+			return tok
+		}
+		// If we end up here, we don't know how to handle this character
+		// and we mark it as illegal
+		tok = newToken(token.ILLEGAL, l.ch)
 	}
+	// advance
 	l.readChar()
 	return tok
 }
 
+// newToken initialises a Token
 func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
+}
+
+// isLetter identifies whether a byte represents a letter or not
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z'
+}
+
+// isDigit identifies whether a character represents a number or not
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
+}
+
+// readIdentifier continues reading the string from the current position
+// until the byte is not a letter, and returns the resulting string.
+func (l *Lexer) readIdentifier() string {
+	position := l.position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+// readNumber continues reading the string from the current position
+// until the byte is not a digit anymore, and returns the resulting string
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
 }

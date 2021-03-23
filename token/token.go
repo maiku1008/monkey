@@ -25,6 +25,21 @@ const (
 	LET      = "LET"
 )
 
+// A map containing keywords
+var keywords = map[string]TokenType{
+	"fn":  FUNCTION,
+	"let": LET,
+}
+
+// LookupIdent checks if the identifier is a monkey language keyword
+// otherwise sets the identifier as a IDENT TokenType
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return IDENT
+}
+
 type TokenType string
 
 type Token struct {
