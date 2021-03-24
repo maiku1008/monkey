@@ -63,3 +63,16 @@ var _ Expression = (*Identifier)(nil)
 
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+
+// ReturnStatement is a node that represents a monkey return statement
+type ReturnStatement struct {
+	Token       token.Token // the token.RETURN token
+	ReturnValue Expression
+}
+
+// Assert implementations
+var _ Node = (*ReturnStatement)(nil)
+var _ Statement = (*ReturnStatement)(nil)
+
+func (rs *ReturnStatement) statementNode()       {}
+func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
