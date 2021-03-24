@@ -132,8 +132,10 @@ func newToken(tokenType token.TokenType, ch byte) token.Token {
 }
 
 // isLetter identifies whether a byte represents a letter or not
+// An underscore is considered a valid letter,
+// so we can enable identifier such as some_number
 func isLetter(ch byte) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z'
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
 
 // isDigit identifies whether a character represents a number or not

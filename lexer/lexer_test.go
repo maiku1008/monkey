@@ -8,6 +8,7 @@ import (
 
 func TestNextToken(t *testing.T) {
 	input := `
+	    let under_score = 2;
 		let five = 5;
 		let ten = 10;
 
@@ -33,6 +34,11 @@ func TestNextToken(t *testing.T) {
 		expectedType    token.TokenType
 		expectedLiteral string
 	}{
+		{token.LET, "let"},
+		{token.IDENT, "under_score"},
+		{token.ASSIGN, "="},
+		{token.INT, "2"},
+		{token.SEMICOLON, ";"},
 		{token.LET, "let"},
 		{token.IDENT, "five"},
 		{token.ASSIGN, "="},
