@@ -1,3 +1,5 @@
+// Package ast has the necessary facilities to represent
+// an Abstract Syntax Tree for the Monkey language
 package ast
 
 import "monkey/token"
@@ -25,6 +27,9 @@ type Program struct {
 	Statements []Statement
 }
 
+// Assert implementations
+var _ Node = (*Program)(nil)
+
 func (p *Program) TokenLiteral() string {
 	if len(p.Statements) > 0 {
 		return p.Statements[0].TokenLiteral()
@@ -39,6 +44,10 @@ type LetStatement struct {
 	Value Expression  // hold the expression
 }
 
+// Assert implementations
+var _ Node = (*LetStatement)(nil)
+var _ Statement = (*LetStatement)(nil)
+
 func (ls *LetStatement) statementNode()       {}
 func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
 
@@ -47,6 +56,10 @@ type Identifier struct {
 	Token token.Token // the token.IDENT token
 	Value string
 }
+
+// Assert implementations
+var _ Node = (*Identifier)(nil)
+var _ Expression = (*Identifier)(nil)
 
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
