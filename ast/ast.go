@@ -87,7 +87,6 @@ type Identifier struct {
 	Value string
 }
 
-// Assert implementations
 var _ Node = (*Identifier)(nil)
 var _ Expression = (*Identifier)(nil)
 
@@ -101,7 +100,6 @@ type ReturnStatement struct {
 	ReturnValue Expression
 }
 
-// Assert implementations
 var _ Node = (*ReturnStatement)(nil)
 var _ Statement = (*ReturnStatement)(nil)
 
