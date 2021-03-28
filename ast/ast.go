@@ -152,6 +152,7 @@ func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 func (il *IntegerLiteral) String() string       { return il.Token.Literal }
 
 // PrefixExpression is a node representing a prefix expression.
+// <prefix operator><expression>;
 // example: !5;
 type PrefixExpression struct {
 	Token    token.Token
@@ -176,6 +177,8 @@ func (pe *PrefixExpression) String() string {
 }
 
 // InfixExpression is a node representing an infix expression.
+// <expression> <infix operator> <expression>
+
 // Examples:
 // 5 + 5
 // 5 + 5;

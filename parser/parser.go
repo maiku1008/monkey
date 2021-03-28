@@ -175,6 +175,7 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 // parseExpressionStatement returns an instance of *ast.ExpressionStatement
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	defer untrace(trace("parseExpressionStatement"))
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
 
@@ -185,23 +186,38 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return stmt
 }
 
-// parseExpression checks whether we have a parsing function
-// mapped to the current token's type and runs it.
+// parseExpression return an expression node.
 func (p *Parser) parseExpression(precedence int) ast.Expression {
+	defer untrace(trace("parseExpression"))
+	// Check if there is a prefixParse function associated to the current token's type.
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
+		// attaches an error message to the parser for later use
 		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
+	// If the function exists, run it and assign it to a local variable representing
+	// the expression on the left of the operator
 	leftExp := prefix()
 
+	// Main loop implementing Vaughan Pratt's "Top down operator precedence".
+	// https://tdop.github.io/
+
+	// Unless the next token is a semicolon and the precedence (an int) is smaller
+	// then the the one of the next token:
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		// check if there is an infixParseFn for the type of the next token
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
+			// If there is not, return just the left expression
 			return leftExp
 		}
+		// If there is, move to the next token
 		p.nextToken()
+		// run the infix parse function on the current left expression,
+		// and assign its result to leftExp
 		leftExp = infix(leftExp)
+		// Continue doing this until we reach a semicolon or the precedence changes
 	}
 
 	return leftExp
@@ -220,6 +236,7 @@ func (p *Parser) parseIdentifier() ast.Expression {
 
 // return an ast node which represents an expression integer literal
 func (p *Parser) parseIntegerLiteral() ast.Expression {
+	defer untrace(trace("parseExpression"))
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
@@ -234,6 +251,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 // return an ast node which represents a prefix expression
 func (p *Parser) parsePrefixExpression() ast.Expression {
+	defer untrace(trace("parsePrefixExpression"))
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -244,14 +262,21 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	return expression
 }
 
+// return an ast node which represents an infix expression
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	defer untrace(trace("parseInfixExpression"))
+	// Initialise an expression with the token, operator and the expression
+	// which is the operand on the left of the operator.
 	expression := &ast.InfixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
 		Left:     left,
 	}
+	// Take the current precedence, and advance to the next token
 	precedence := p.curPrecedence()
 	p.nextToken()
+	// recursively call parseExpression() to generate the expression on the
+	// right of the operator, with the correct precedence
 	expression.Right = p.parseExpression(precedence)
 
 	return expression
