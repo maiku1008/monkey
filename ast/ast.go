@@ -25,8 +25,8 @@ type Expression interface {
 	expressionNode()
 }
 
-// Program is the root node of every AST of the parser
-// Every valid monkey program is a series of statements
+// Program is the root node of every AST of the parser.
+// It hold a slice of Statements.
 type Program struct {
 	Statements []Statement
 }
@@ -170,6 +170,41 @@ func (pe *PrefixExpression) String() string {
 	out.WriteString("(")
 	out.WriteString(pe.Operator)
 	out.WriteString(pe.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
+// InfixExpression is a node representing an infix expression.
+// Examples:
+// 5 + 5
+// 5 + 5;
+// 5 - 5;
+// 5 * 5;
+// 5 / 5;
+// 5 > 5;
+// 5 < 5;
+// 5 == 5;
+// 5 != 5;
+type InfixExpression struct {
+	Token    token.Token // The operator token, e.g. +
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+var _ Node = (*InfixExpression)(nil)
+var _ Expression = (*InfixExpression)(nil)
+
+func (ie *InfixExpression) expressionNode()      {}
+func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *InfixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ie.Left.String())
+	out.WriteString(" " + ie.Operator + " ")
+	out.WriteString(ie.Right.String())
 	out.WriteString(")")
 
 	return out.String()
