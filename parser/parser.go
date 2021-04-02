@@ -59,6 +59,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.TRUE, p.parseBoolean)
+	p.registerPrefix(token.FALSE, p.parseBoolean)
 
 	// Initialise the infix parse functions
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -92,9 +94,8 @@ func (p *Parser) ParseProgram() *ast.Program {
 	for !p.curTokenIs(token.EOF) {
 		// Get a statement and add it to the program's list
 		stmt := p.parseStatement()
-		if stmt != nil {
-			program.Statements = append(program.Statements, stmt)
-		}
+		program.Statements = append(program.Statements, stmt)
+
 		// advance
 		p.nextToken()
 	}
@@ -175,7 +176,6 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 // parseExpressionStatement returns an instance of *ast.ExpressionStatement
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	defer untrace(trace("parseExpressionStatement"))
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
 
@@ -188,17 +188,17 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 
 // parseExpression return an expression node.
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	defer untrace(trace("parseExpression"))
 	// Check if there is a prefixParse function associated to the current token's type.
-	prefix := p.prefixParseFns[p.curToken.Type]
-	if prefix == nil {
+	prefixFn := p.prefixParseFns[p.curToken.Type]
+	if prefixFn == nil {
 		// attaches an error message to the parser for later use
 		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
-	// If the function exists, run it and assign it to a local variable representing
-	// the expression on the left of the operator
-	leftExp := prefix()
+	// If the function exists, run it and assign its result
+	// to a local variable representing the expression
+	// on the left of the operator
+	leftExp := prefixFn()
 
 	// Main loop implementing Vaughan Pratt's "Top down operator precedence".
 	// https://tdop.github.io/
@@ -207,8 +207,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	// then the the one of the next token:
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		// check if there is an infixParseFn for the type of the next token
-		infix := p.infixParseFns[p.peekToken.Type]
-		if infix == nil {
+		infixFn := p.infixParseFns[p.peekToken.Type]
+		if infixFn == nil {
 			// If there is not, return just the left expression
 			return leftExp
 		}
@@ -216,7 +216,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.nextToken()
 		// run the infix parse function on the current left expression,
 		// and assign its result to leftExp
-		leftExp = infix(leftExp)
+		leftExp = infixFn(leftExp)
 		// Continue doing this until we reach a semicolon or the precedence changes
 	}
 
@@ -236,7 +236,6 @@ func (p *Parser) parseIdentifier() ast.Expression {
 
 // return an ast node which represents an expression integer literal
 func (p *Parser) parseIntegerLiteral() ast.Expression {
-	defer untrace(trace("parseExpression"))
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
@@ -251,7 +250,6 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 // return an ast node which represents a prefix expression
 func (p *Parser) parsePrefixExpression() ast.Expression {
-	defer untrace(trace("parsePrefixExpression"))
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -264,7 +262,6 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 
 // return an ast node which represents an infix expression
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	defer untrace(trace("parseInfixExpression"))
 	// Initialise an expression with the token, operator and the expression
 	// which is the operand on the left of the operator.
 	expression := &ast.InfixExpression{
@@ -280,6 +277,11 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression.Right = p.parseExpression(precedence)
 
 	return expression
+}
+
+// return an ast node which represents a boolean expression
+func (p *Parser) parseBoolean() ast.Expression {
+	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
 }
 
 type (

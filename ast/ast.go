@@ -212,3 +212,16 @@ func (ie *InfixExpression) String() string {
 
 	return out.String()
 }
+
+// Boolean is a node representing a boolean expression
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+var _ Node = (*Boolean)(nil)
+var _ Expression = (*Boolean)(nil)
+
+func (b *Boolean) expressionNode()      {}
+func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
+func (b *Boolean) String() string       { return b.Token.Literal }
