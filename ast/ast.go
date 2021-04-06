@@ -24,10 +24,15 @@ type Expression interface {
 	expressionNode()
 }
 
+// Program is the root node of our AST tree.
+// It contains a slice of Statement, representing all the statements
+// in the monkey program.
 type Program struct {
 	Statements []Statement
 }
 
+// TokenLiteral wraps the TokenLiteral method of the first available statement.
+// If the list of Statements is empty, it returns an empty string
 func (p *Program) TokenLiteral() string {
 	if len(p.Statements) > 0 {
 		return p.Statements[0].TokenLiteral()
@@ -36,6 +41,8 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+// String returns the aggregated value of the String method
+// of each statement
 func (p *Program) String() string {
 	var out bytes.Buffer
 
