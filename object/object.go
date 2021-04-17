@@ -12,7 +12,9 @@ const (
 
 // Object represents any object in the monkey language
 type Object interface {
+	// Return the ObjectType
 	Type() ObjectType
+	// Return the value in string form
 	Inspect() string
 }
 
