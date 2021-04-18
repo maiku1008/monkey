@@ -305,7 +305,7 @@ addTwo(2);`
 	testIntegerObject(t, testEval(input), 4)
 }
 
-func TestStringLItera(t *testing.T) {
+func TestStringLiteral(t *testing.T) {
 	input := `"Hello World!"`
 
 	evaluated := testEval(input)
@@ -357,6 +357,27 @@ func TestBuiltinFunctions(t *testing.T) {
 				t.Errorf("wrong error message. expected=%q, got=%q",
 					expected, errObj.Message)
 			}
+		}
+	}
+}
+
+func TestTypeBuiltin(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{`type("one")`, "STRING"},
+		{`type(1)`, "INTEGER"},
+		{`type(true)`, "BOOLEAN"},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		str, ok := evaluated.(*object.String)
+		if !ok {
+			t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+		}
+		if str.Value != tt.expected {
+			t.Errorf("String has wrong value. got=%q", str.Value)
 		}
 	}
 }
