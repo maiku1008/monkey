@@ -271,3 +271,15 @@ func (ce *CallExpression) String() string {
 
 	return out.String()
 }
+
+// StringLiteral represents a string literal expression
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+var _ Expression = (*StringLiteral)(nil)
+
+func (sl *StringLiteral) expressionNode()      {}
+func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
+func (sl *StringLiteral) String() string       { return sl.Token.Literal }

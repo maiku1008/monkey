@@ -16,6 +16,7 @@ const (
 	INTEGER_OBJ      = "INTEGER"
 	NULL_OBJ         = "NULL"
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
+	STRING_OBJ       = "STRING"
 )
 
 // Object represents any object in the monkey language
@@ -132,3 +133,13 @@ func (f *Function) Inspect() string {
 
 	return out.String()
 }
+
+// String is an object representing a string in the monkey language
+type String struct {
+	Value string
+}
+
+var _ Object = (*String)(nil)
+
+func (s *String) Type() ObjectType { return STRING_OBJ }
+func (s *String) Inspect() string  { return s.Value }
