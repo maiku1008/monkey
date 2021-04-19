@@ -10,6 +10,7 @@ import (
 type ObjectType string
 
 const (
+	ARRAY_OBJ        = "ARRAY"
 	BOOLEAN_OBJ      = "BOOLEAN"
 	BUILTIN_OBJ      = "BUILTIN"
 	ERROR_OBJ        = "ERROR"
@@ -156,3 +157,25 @@ var _ Object = (*Builtin)(nil)
 
 func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
 func (b *Builtin) Inspect() string  { return "builtin function" }
+
+// Array represents an array in the monkey language
+type Array struct {
+	Elements []Object
+}
+
+var _ Object = (*Array)(nil)
+
+func (ao *Array) Type() ObjectType { return ARRAY_OBJ }
+func (ao *Array) Inspect() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, e := range ao.Elements {
+		elements = append(elements, e.Inspect())
+	}
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
