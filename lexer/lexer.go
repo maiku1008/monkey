@@ -8,9 +8,9 @@ import (
 // Lexer translates source code into tokens
 type Lexer struct {
 	input        string
-	position     int  // current position in input (points to current char)
-	readPosition int  // current reading position in input (after current char)
-	ch           byte // current char under examination
+	position     int  // current index of the input (current byte character)
+	readPosition int  // next index of the input (next byte character)
+	ch           byte // current byte character
 }
 
 // New initialises a Lexer
@@ -142,7 +142,7 @@ func newToken(tokenType token.TokenType, ch byte) token.Token {
 
 // isLetter identifies whether a byte represents a letter or not
 // An underscore is considered a valid letter,
-// so we can enable identifier such as some_number
+// so we can enable identifiers such as some_number
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
@@ -153,7 +153,7 @@ func isDigit(ch byte) bool {
 }
 
 // readIdentifier continues reading the string from the current position
-// until the byte is not a letter, and returns the resulting string.
+// until the byte is not a letter anymore, and returns the resulting string
 func (l *Lexer) readIdentifier() string {
 	position := l.position
 	for isLetter(l.ch) {
